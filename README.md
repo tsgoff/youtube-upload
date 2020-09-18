@@ -1,13 +1,7 @@
-
-Fork
-============
-Fork from https://github.com/tokland/youtube-upload
-
-
 Introduction
 ============
 
-_Youtube-upload_ is a command line Python script that uploads videos to Youtube (it should work on any platform -GNU/Linux, BSD, OS X, Windows, ...- that runs Python) using theYoutube [APIv3](https://developers.google.com/youtube/v3/).
+Command-line script to upload videos to Youtube using theYoutube [APIv3](https://developers.google.com/youtube/v3/). It should work on any platform (GNU/Linux, BSD, OS X, Windows, ...) that runs Python.
 
 Dependencies
 ============
@@ -31,19 +25,19 @@ $ cd youtube-upload-master
 $ sudo python setup.py install
 ```
 
-  * Or run directly from sources:
+Or run directly from sources:
 
 ```
 $ cd youtube-upload-master
 $ PYTHONPATH=. python bin/youtube-upload ...
 ```
 
-Authentication
-==============
+Setup
+=====
 
 You'll see that there is no email/password options. Instead, the Youtube API uses [OAuth 2.0](https://developers.google.com/accounts/docs/OAuth2) to authenticate the upload. The first time you try to upload a video, you will be asked to follow a URL in your browser to get an authentication token. If you have multiple channels for the logged in user, you will also be asked to pick which one you want to upload the videos to. You can use multiple credentials, just use the option ```--credentials-file```. Also, check the [token expiration](https://developers.google.com/youtube/v3/) policies.
 
-The package includes a default ```client_secrets.json``` file. If you plan to make a heavy use of the script, please [create and use your own OAuth 2.0 file](https://developers.google.com/youtube/registering_an_application), it's a free service. Steps:
+The package used to include a default ```client_secrets.json``` file. It does not work anymore, Google has revoked it. So you now must [create and use your own OAuth 2.0 file](https://developers.google.com/youtube/registering_an_application), it's a free service. Steps:
 
 * Go to the Google [console](https://console.developers.google.com/).
 * _Create project_.
@@ -52,12 +46,14 @@ The package includes a default ```client_secrets.json``` file. If you plan to ma
 * Side menu: _APIs & auth_ -> _Credentials_.
 * _Create a Client ID_: Add credentials -> OAuth 2.0 Client ID -> Other -> Name: youtube-upload -> Create -> OK
 * _Download JSON_: Under the section "OAuth 2.0 client IDs". Save the file to your local system. 
-* Use this JSON as your credentials file: ```--client-secrets=CLIENT_SECRETS```
+* Use this JSON as your credentials file: `--client-secrets=CLIENT_SECRETS` or copy it to `~/client_secrets.json`.
+
+*Note: ```client_secrets.json``` is a file you can download from the developer console, the credentials file is something auto generated after the first time the script is run and the google account sign in is followed, the file is stored at ```~/.youtube-upload-credentials.json```.*
 
 Examples
 ========
 
-* Upload a video:
+* Upload a video (a valid `~/.client_secrets.json` should exist, check the Setup section):
 
 ```
 $ youtube-upload --title="A.S. Mutter" anne_sophie_mutter.flv
@@ -68,16 +64,17 @@ pxzZ-fYjeYs
 
 ```
 $ youtube-upload \
-  --title="A.S. Mutter" 
+  --title="A.S. Mutter" \
   --description="A.S. Mutter plays Beethoven" \
-  --category=Music \
+  --category="Music" \
   --tags="mutter, beethoven" \
   --recording-date="2011-03-10T15:32:17.0Z" \
   --default-language="en" \
   --default-audio-language="en" \
-  --client-secrets=my_client_secrets.json \
-  --credentials-file=my_credentials.json \
-  --playlist "My favorite music" \
+  --client-secrets="my_client_secrets.json" \
+  --credentials-file="my_credentials.json" \
+  --playlist="My favorite music" \
+  --embeddable=True|False \
   anne_sophie_mutter.flv
 tx2Zb-145Yz
 ```
@@ -127,24 +124,12 @@ Get available categories
 
 And see the JSON response below. Note that categories with the attribute `assignable` equal to `false` cannot be used.
 
-Using `shoogle`:
+Using [shoogle](https://github.com/tokland/shoogle):
 
 ```
 $ shoogle execute --client-secret-file client_secret.json \
                   youtube:v3.videoCategories.list <(echo '{"part": "id,snippet", "regionCode": "es"}')  | 
     jq ".items[] | select(.snippet.assignable) | {id: .id, title: .snippet.title}"
-```
-
-Docker
-========
-
-* Docker run with credentials file:
-
-```
-docker run --rm \
--v ~/.youtube-upload-credentials.json:/home/python/.youtube-upload-credentials.json \
--v ~/.client_secrets.json:/usr/local/share/youtube_upload/client_secrets.json \
--v ~/videos:/videos bios/youtube-upload --title="Timelapse Demo" --privacy=unlisted /videos/demovideo.mp4
 ```
 
 Notes for developers
